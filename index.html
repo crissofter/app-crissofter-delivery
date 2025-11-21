@@ -1,1 +1,325 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crissofter Delivery - Demo</title></head><body><h1>Crissofter Delivery Demo</h1></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Crissofter Delivery - Demo</title>
+
+<style>
+:root{
+  --red:#e63946;
+  --yellow:#ffd166;
+  --bg:#fff7ec;
+  --muted:#6b6b6b;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+.container{
+  max-width:420px;
+  margin:16px auto;
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.08);
+}
+header{
+  background:var(--red);
+  color:#fff;
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header h1{
+  font-size:18px;
+  margin:0;
+  font-weight:800;
+}
+.sub{ font-size:12px; opacity:.9; }
+.menu{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.item{
+  display:flex;
+  gap:12px;
+  background:#fff;
+  border:1px solid #f2d2d2;
+  border-radius:12px;
+  padding:12px;
+  align-items:center;
+}
+.thumb{
+  width:70px;
+  height:70px;
+  border-radius:10px;
+  background:linear-gradient(45deg,var(--yellow),#ffb703);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+}
+.info{ flex:1; }
+.name{ font-weight:800; }
+.desc{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+}
+.price{
+  font-weight:800;
+  color:#b22222;
+}
+.add{
+  background:var(--red);
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:800;
+}
+.cartBar{
+  position:fixed;
+  left:12px;
+  right:12px;
+  bottom:14px;
+  background:#111;
+  color:#fff;
+  padding:12px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:420px;
+  margin:0 auto;
+}
+.cartBtn{
+  background:var(--yellow);
+  color:#b22222;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:800;
+}
+.overlay{
+  position:fixed;
+  left:0; right:0; top:0; bottom:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:999;
+}
+.modal{
+  background:#fff;
+  width:100%;
+  max-width:420px;
+  border-radius:14px;
+  padding:16px;
+}
+.cart-list{
+  max-height:300px;
+  overflow:auto;
+  margin-bottom:10px;
+}
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px dashed #ddd;
+}
+label{
+  display:block;
+  margin-top:10px;
+  font-size:13px;
+  color:var(--muted);
+}
+input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  margin-top:6px;
+}
+.sendWA{
+  width:100%;
+  padding:12px;
+  background:linear-gradient(90deg,#25D366,#128C7E);
+  border:none;
+  border-radius:10px;
+  color:#fff;
+  font-weight:800;
+  margin-top:12px;
+}
+footer{
+  text-align:center;
+  padding:10px;
+  font-size:12px;
+  color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<header>
+  <div>
+    <h1>Crissofter Delivery</h1>
+    <div class="sub">Demo funcional • Pedidos via WhatsApp</div>
+  </div>
+  <div style="font-size:12px;text-align:right">DEMO</div>
+</header>
+
+<div class="menu" id="menu"></div>
+<div style="height:100px"></div>
+</div>
+
+<div class="cartBar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <strong>Carrinho</strong>
+    <div id="cartCount" style="background:#333;padding:6px 10px;border-radius:10px;">0</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <strong id="cartTotal">R$ 0,00</strong>
+    <button class="cartBtn" id="openCart">Ver pedido</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Finalizar pedido</h3>
+
+    <div class="cart-list" id="cartList"></div>
+
+    <label>Nome do cliente</label>
+    <input id="customerName" placeholder="Seu nome" />
+
+    <label>Endereço (opcional)</label>
+    <input id="customerAddress" placeholder="Rua, Nº" />
+
+    <label>Telefone (opcional)</label>
+    <input id="customerPhone" placeholder="(xx) 9xxxx-xxxx" />
+
+    <label>Telefone do restaurante (opcional)</label>
+    <input id="restPhone" placeholder="55XXXXXXXXXXX" />
+
+    <button class="sendWA" id="sendWA">Enviar pelo WhatsApp</button>
+    <button style="width:100%;padding:10px;border:none;background:#eee;border-radius:8px;margin-top:10px;" id="closeCart">Continuar Pedindo</button>
+  </div>
+</div>
+
+<footer>Demo Crissofter Delivery — Versão Fast-Food</footer>
+
+<script>
+const items = [
+  {id:1,name:"Classic Burger",desc:"Burger 150g, queijo, picles",price:24.9},
+  {id:2,name:"Cheese Fries",desc:"Batata com cheddar",price:12.5},
+  {id:3,name:"Nuggets 8un",desc:"Crocantes e dourados",price:14.0},
+  {id:4,name:"Refrigerante 350ml",desc:"Lata gelada",price:6.0},
+  {id:5,name:"Combo Veggie",desc:"Burger vegetal + fritas",price:26.5}
+];
+
+function money(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});}
+
+const menu = document.getElementById("menu");
+const cart = {};
+
+function loadMenu(){
+  menu.innerHTML="";
+  items.forEach(i=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML = `
+      <div class="thumb">🍔</div>
+      <div class="info">
+        <div class="name">${i.name}</div>
+        <div class="desc">${i.desc}</div>
+        <div class="row">
+          <div class="price">${money(i.price)}</div>
+          <button class="add" data-id="${i.id}">Adicionar</button>
+        </div>
+      </div>`;
+    menu.appendChild(div);
+  });
+
+  document.querySelectorAll(".add").forEach(btn=>{
+    btn.onclick = ()=>{
+      let id=btn.dataset.id;
+      if(!cart[id]) cart[id]={...items.find(x=>x.id==id),qty:0};
+      cart[id].qty++;
+      refreshCart();
+    };
+  });
+}
+
+function refreshCart(){
+  let count=0,total=0;
+  Object.values(cart).forEach(i=>{
+    count+=i.qty;
+    total+=i.qty*i.price;
+  });
+  document.getElementById("cartCount").innerText=count;
+  document.getElementById("cartTotal").innerText=money(total);
+}
+
+document.getElementById("openCart").onclick=()=>{
+  document.getElementById("overlay").style.display="flex";
+  loadCartList();
+};
+
+document.getElementById("closeCart").onclick=()=>{
+  document.getElementById("overlay").style.display="none";
+};
+
+function loadCartList(){
+  const list=document.getElementById("cartList");
+  list.innerHTML="";
+  Object.values(cart).forEach(i=>{
+    const d=document.createElement("div");
+    d.className="cart-item";
+    d.innerHTML=`<span>${i.qty}x ${i.name}</span><span>${money(i.price*i.qty)}</span>`;
+    list.appendChild(d);
+  });
+  if(Object.keys(cart).length===0){
+    list.innerHTML="<div style='color:#999'>Seu carrinho está vazio.</div>";
+  }
+}
+
+document.getElementById("sendWA").onclick=()=>{
+  let name=document.getElementById("customerName").value||"---";
+  let addr=document.getElementById("customerAddress").value||"---";
+  let phone=document.getElementById("customerPhone").value||"---";
+  let rest=document.getElementById("restPhone").value.replace(/\D/g,"");
+
+  let text="Pedido via Crissofter Delivery%0A";
+  text+=`Cliente: ${name}%0AEndereço: ${addr}%0ATelefone: ${phone}%0A%0AITENS:%0A`;
+
+  Object.values(cart).forEach(i=>{
+    text+=`${i.qty}x ${i.name} - ${money(i.price)}%0A`;
+  });
+
+  let total=Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
+  text+=`%0ATotal: ${money(total)}`;
+
+  let url=rest?`https://wa.me/${rest}?text=${text}`:`https://wa.me/?text=${text}`;
+
+  window.open(url,"_blank");
+};
+
+loadMenu();
+</script>
+
+</body>
+</html>
