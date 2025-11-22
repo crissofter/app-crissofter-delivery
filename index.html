@@ -4,35 +4,23 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Crissofter Delivery - Demo</title>
-
+<link rel="manifest" href="manifest.json">
+  
 <style>
 :root{
-  --red:#e63946;
-  --yellow:#ffd166;
-  --bg:#fff7ec;
-  --muted:#6b6b6b;
+  --bg:#0f1724; --card:#111827; --muted:#9ca3af; --accent:#06b6d4; --pay:#25D366;
+  --glass: rgba(255,255,255,0.03);
 }
-body{
-  margin:0;
-  background:var(--bg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#fff}
+.container{max-width:420px;margin:18px auto;padding-bottom:120px}
+
+/* HEADER */
+.header{
+  display:flex;align-items:center;gap:12px;
+  padding:
 }
-.container{
-  max-width:420px;
-  margin:16px auto;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden;
-  box-shadow:0 12px 40px rgba(0,0,0,.08);
-}
-header{
-  background:var(--red);
-  color:#fff;
-  padding:18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+ 
 header h1{
   font-size:18px;
   margin:0;
