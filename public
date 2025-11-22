@@ -1,6 +1,6 @@
-assets
-img
-logo
-icons
-styles
-scripts
+/assets
+   /img
+   /logo
+   /icons
+/styles
+/scripts
