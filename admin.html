@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin - Crissofter Delivery</title>
+
+<style>
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  background:#0b1220;
+  color:#fff;
+  padding:16px;
+}
+textarea{
+  width:100%;
+  height:320px;
+  background:#07101a;
+  color:#dcefff;
+  border:1px solid #123;
+  margin-top:8px;
+  border-radius:8px;
+  padding:8px;
+}
+input{
+  width:100%;
+  padding:8px;
+  border-radius:6px;
+  margin-top:8px;
+  background:#07101a;
+  border:1px solid #123;
+  color:#fff;
+}
+button{
+  padding:10px;
+  border-radius:8px;
+  margin-top:12px;
+  border:none;
+  font-weight:bold;
+  background:#06b6d4;
+  color:#021024;
+  cursor:pointer;
+}
+.logo{
+  height:64px;
+}
+</style>
+</head>
+
+<body>
+<h2>Administração do App (sem backend)</h2>
+<p>Edite o cardápio abaixo e clique em <strong>Download menu.json</strong>. Depois faça upload no GitHub substituindo o arquivo menu.json existente.</p>
+
+<label>Nome do app</label>
+<input id="appName" value="Delivery Demo"/>
+
+<label>URL do Logo (use 'assets/logo.svg')</label>
+<input id="logoUrl" value="assets/logo.svg"/>
+
+<label>menu.json</label>
+<textarea id="menuText"></textarea>
+
+<div>
+  <button id="load">Carregar menu.json</button>
+  <button id="download">Download menu.json</button>
+</div>
+
+<script>
+async function load(){
+  try{
+    let res = await fetch('menu.json');
+    let json = await res.json();
+    document.getElementById('menuText').value = JSON.stringify(json, null, 2);
+  } catch (e){
+    alert("Erro ao carregar menu.json");
+  }
+}
+
+document.getElementById('load').addEventListener('click', load);
+
+document.getElementById('download').addEventListener('click', () => {
+  const text = document.getElementById('menuText').value;
+  const blob = new Blob([text], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "menu.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+load();
+</script>
+
+</body>
+</html>
