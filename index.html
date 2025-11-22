@@ -289,7 +289,7 @@ document.getElementById("sendWA").onclick=()=>{
   let name=document.getElementById("customerName").value||"---";
   let addr=document.getElementById("customerAddress").value||"---";
   let phone=document.getElementById("customerPhone").value||"---";
-  let rest=document.getElementById("restPhone").value.replace(/\D/g,"");
+  const rest = "5522992637924";
 
   let text="Pedido via Crissofter Delivery%0A";
   text+=`Cliente: ${name}%0AEndereço: ${addr}%0ATelefone: ${phone}%0A%0AITENS:%0A`;
@@ -300,8 +300,8 @@ document.getElementById("sendWA").onclick=()=>{
 
   let total=Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
   text+=`%0ATotal: ${money(total)}`;
-
-  let url=rest?`https://wa.me/${rest}?text=${text}`:`https://wa.me/?text=${text}`;
+  let url = `https://wa.me/${rest}?text=${text}`;
+  
 
   window.open(url,"_blank");
 };
