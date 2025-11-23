@@ -915,4 +915,175 @@ document.getElementById("confirmSend").onclick = async ()=>{
   await loadConfigAndMenu();
 })();
 
+/scripts/ui.js
+/* ---------------------------------------------------------
+   Crissofter Delivery - UI.JS
+   Responsável por:
+   - aplicar tema (cores / logo)
+   - controlar banners/promos
+   - pequenas animações e transições
+   - registro do service worker (quando disponível)
+---------------------------------------------------------- */
+
+(function(){
+  /**
+   * Apply visual theme from config
+   * - expects `config` to be loaded and available
+   */
+  function applyThemeFromConfig(cfg){
+    if(!cfg) return;
+    try{
+      // root CSS variables
+      const root = document.documentElement;
+      if(cfg.themeColor) root.style.setProperty('--bg', cfg.themeColor);
+      if(cfg.panelColor) root.style.setProperty('--panel', cfg.panelColor);
+      if(cfg.accentColor) root.style.setProperty('--accent', cfg.accentColor);
+      if(cfg.goldColor) root.style.setProperty('--gold', cfg.goldColor);
+
+      // logo
+      if(cfg.logo && document.getElementById('brandLogo')){
+        document.getElementById('brandLogo').src = cfg.logo;
+      }
+
+      // subtitle override
+      if(cfg.subtitle && document.getElementById('restaurantSub')){
+        document.getElementById('restaurantSub').innerText = cfg.subtitle;
+      }
+
+      // status text color handling
+      const status = document.getElementById('storeStatus');
+      if(status && cfg.status){
+        status.innerText = cfg.status.toUpperCase();
+        if(cfg.status.toLowerCase() === 'fechado'){
+          status.style.color = '#ff6b6b';
+        } else {
+          status.style.color = '';
+        }
+      }
+    }catch(e){
+      console.warn('applyThemeFromConfig error', e);
+    }
+  }
+
+  /**
+   * Simple promo carousel - expects `config.bannerList` or `config.banner`
+   */
+  function initPromoCarousel(cfg){
+    const promoArea = document.getElementById('promoArea');
+    if(!promoArea) return;
+
+    const banners = (cfg && cfg.bannerList && cfg.bannerList.length) ? cfg.bannerList : (cfg && cfg.banner ? [cfg.banner] : []);
+    if(banners.length === 0) return;
+
+    // create container
+    promoArea.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card promo-card';
+    wrapper.style.position = 'relative';
+    wrapper.style.overflow = 'hidden';
+
+    banners.forEach((src, idx) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.style.width = '100%';
+      img.style.display = (idx === 0) ? 'block' : 'none';
+      img.style.borderRadius = '10px';
+      img.alt = 'promo';
+      wrapper.appendChild(img);
+    });
+
+    promoArea.appendChild(wrapper);
+
+    // auto rotate
+    let current = 0;
+    setInterval(()=>{
+      const imgs = wrapper.querySelectorAll('img');
+      if(imgs.length <= 1) return;
+      imgs[current].style.display = 'none';
+      current = (current + 1) % imgs.length;
+      imgs[current].style.display = 'block';
+    }, 4000);
+  }
+
+  /**
+   * small animation for add-to-cart
+   */
+  function animateAddToCart(btn){
+    try{
+      btn.animate([
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.06)' },
+        { transform: 'scale(1)' }
+      ], { duration: 220, easing: 'ease-out' });
+    }catch(e){}
+  }
+
+  /**
+   * Enhance all add buttons to produce a small animation
+   */
+  function bindAddAnimations(){
+    document.addEventListener('click', function(ev){
+      const b = ev.target.closest('.btn-add');
+      if(b) animateAddToCart(b);
+    });
+  }
+
+  /**
+   * Register service worker if available and friendly UI messaging
+   */
+  function registerServiceWorker(){
+    if('serviceWorker' in navigator){
+      try{
+        navigator.serviceWorker.register('/public/sw.js').then(reg=>{
+          // success
+          console.log('SW registered', reg.scope);
+        }).catch(err=>{
+          console.warn('SW register failed', err);
+        });
+      }catch(e){
+        console.warn('SW register exception', e);
+      }
+    }
+  }
+
+  /**
+   * Small helper to show toast messages (uses successWrap modal)
+   */
+  function showSuccessToast(message, timeout = 2000){
+    const info = document.getElementById('successInfo');
+    const wrap = document.getElementById('successWrap');
+    if(!info || !wrap) return;
+    info.innerText = message;
+    wrap.style.display = 'flex';
+    setTimeout(()=> {
+      wrap.style.display = 'none';
+    }, timeout);
+  }
+
+  /**
+   * Expose a few functions to window for other scripts to call
+   */
+  window.CrissofterUI = {
+    applyThemeFromConfig,
+    initPromoCarousel,
+    bindAddAnimations,
+    registerServiceWorker,
+    showSuccessToast
+  };
+
+  // auto-run some behaviors as soon as script loads
+  document.addEventListener('DOMContentLoaded', function(){
+    // best-effort: apply theme if config already exists
+    if(window.__CONFIG_RUNTIME) applyThemeFromConfig(window.__CONFIG_RUNTIME);
+    bindAddAnimations();
+
+    // register SW only if file exists at public/sw.js (no crash if missing)
+    if(navigator && navigator.serviceWorker) {
+      // try registering relative to repo root; GitHub Pages serves from root
+      registerServiceWorker();
+    }
+  });
+})();
+
+
 preview.html
