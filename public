@@ -1,8 +1,37 @@
 /public
-   /assets
-      /img
-      /logo
-      /icons
+
+
+   /assets/logo/logo.svg
+
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="512" height="512" rx="120" fill="#0f1724"/>
+<path d="M150 310 C150 240 240 230 260 175 C280 230 370 240 370 310 C370 380 310 410 260 410 C210 410 150 380 150 310Z" fill="#06b6d4"/>
+<circle cx="260" cy="200" r="60" fill="#d4a73c"/>
+<circle cx="235" cy="190" r="12" fill="#0f1724"/>
+<circle cx="285" cy="190" r="12" fill="#0f1724"/>
+<path d="M240 225 Q260 240 280 225" stroke="#0f1724" stroke-width="8" stroke-linecap="round"/>
+<text x="50%" y="480" text-anchor="middle" font-family="Inter, Arial" font-size="48" fill="#ffffff" font-weight="700">
+Delivery
+</text>
+</svg>
+
+
+/assets/logo/logo-192.png
+
+
+
+
+
+
+
+
+ /assets/logo/logo-512.png
+
+
+
+
+
+
 
    /styles/app.css
 
@@ -480,8 +509,7 @@ textarea {
 }
 
 
-   /scripts
-      app.js
+
 
 
  /scripts/admin.js
@@ -1083,6 +1111,7 @@ document.getElementById('confirmSend').onclick = async ()=>{
 </body>
 </html>
 
+
 /admin.html
 
 <!doctype html>
@@ -1181,6 +1210,7 @@ document.getElementById('confirmSend').onclick = async ()=>{
 </body>
 </html>
 
+
 /data/config.json
 
 {
@@ -1248,6 +1278,87 @@ document.getElementById('confirmSend').onclick = async ()=>{
     }
   ]
 }
+
+/manifest.json
+
+{
+  "name": "Crissofter Delivery",
+  "short_name": "Delivery",
+  "description": "Sistema de pedidos via PWA — rápido, moderno e sem mensalidades.",
+  "start_url": "../public/index.html",
+  "scope": "../public/",
+  "display": "standalone",
+  "background_color": "#0f1724",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait-primary",
+
+  "icons": [
+    {
+      "src": "assets/logo/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
+
+
+
+/sw.json
+
+/* ---------------------------------------------------------
+   Crissofter Delivery - Service Worker
+   Cache básico do PWA
+---------------------------------------------------------- */
+
+const CACHE_NAME = "crissofter-delivery-v1";
+
+const FILES_TO_CACHE = [
+  "/public/index.html",
+  "/public/styles/app.css",
+  "/public/scripts/app.js",
+  "/public/scripts/ui.js",
+  "/public/assets/logo/logo-192.png",
+  "/public/assets/logo/logo-512.png",
+  "/data/config.json",
+  "/data/menu.json"
+];
+
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(FILES_TO_CACHE);
+    })
+  );
+});
+
+self.addEventListener("activate", e => {
+  e.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys
+          .filter(k => k !== CACHE_NAME)
+          .map(k => caches.delete(k))
+      );
+    })
+  );
+});
+
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(resp => {
+      return resp || fetch(e.request);
+    })
+  );
+});
+
+
+
 
 
 
