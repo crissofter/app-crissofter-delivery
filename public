@@ -881,7 +881,22 @@ document.getElementById('confirmSend').onclick = async ()=>{
 </body>
 </html>
 
-admin.html
+/admin.html
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel Administrativo — Crissofter Delivery</title>
+<link rel="stylesheet" href="styles/admin.css">
+</head>
+
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Painel Administrativo</h
+
 menu.json
 manifest.json
 /scripts/app.js
