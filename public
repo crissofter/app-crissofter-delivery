@@ -285,6 +285,7 @@ footer {
 
       
    /styles/admin.css
+
 :root {
   --bg: #0b0f17;
   --panel: #141a24;
@@ -739,6 +740,7 @@ loadAdminData();
 
 
 index.html
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -1082,6 +1084,7 @@ document.getElementById('confirmSend').onclick = async ()=>{
 </html>
 
 /admin.html
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -1178,11 +1181,78 @@ document.getElementById('confirmSend').onclick = async ()=>{
 </body>
 </html>
 
+/data/config.json
+
+{
+  "restaurantName": "Delivery Demo",
+  "subtitle": "Sem mensalidade • Pedido rápido",
+  "phone": "5522992637924",
+  "status": "aberto",
+  "logo": "assets/logo/logo.svg",
+  "banner": "assets/img/banner-default.jpg",
+  "themeColor": "#0f1724",
+  "accentColor": "#06b6d4",
+  "goldColor": "#d4a73c",
+  "payment": ["Pix", "Cartão", "Dinheiro"],
+  "eta": "30-45 min"
+}
 
 
-menu.json
-manifest.json
+
+/data/menu.json
+
+{
+  "categories": [
+    {
+      "title": "Lanches",
+      "items": [
+        {
+          "id": 1,
+          "name": "Classic Burger",
+          "desc": "Burger 150g, queijo, picles",
+          "price": 24.90,
+          "icon": "🍔"
+        },
+        {
+          "id": 2,
+          "name": "Cheese Fries",
+          "desc": "Batata frita com cheddar cremoso",
+          "price": 12.50,
+          "icon": "🍟"
+        }
+      ]
+    },
+    {
+      "title": "Acompanhamentos",
+      "items": [
+        {
+          "id": 3,
+          "name": "Nuggets 8un",
+          "desc": "Crocantes e dourados",
+          "price": 14.00,
+          "icon": "🍗"
+        }
+      ]
+    },
+    {
+      "title": "Bebidas",
+      "items": [
+        {
+          "id": 4,
+          "name": "Refrigerante 350ml",
+          "desc": "Lata gelada",
+          "price": 6.00,
+          "icon": "🥤"
+        }
+      ]
+    }
+  ]
+}
+
+
+
 /scripts/app.js
+
 /* ---------------------------------------------------------
    Crissofter Delivery - APP.JS
    Modo híbrido (Firebase OU JSON local)
