@@ -634,5 +634,285 @@ document.getElementById('confirmSend').onclick = async ()=>{
 admin.html
 menu.json
 manifest.json
-sw.js
+/scripts/app.js
+/* ---------------------------------------------------------
+   Crissofter Delivery - APP.JS
+   Modo híbrido (Firebase OU JSON local)
+---------------------------------------------------------- */
+
+let useFirebase = !!window.FIREBASE_CONFIG;
+let restaurantKey = window.location.pathname.split('/r/')[1] || "demo";
+
+const cart = {};
+let config = null;
+let menuData = null;
+let chosenPay = null;
+
+function money(v){
+  return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+/* ---------------------------------------------------------
+   FETCH JSON (Fallback)
+---------------------------------------------------------- */
+async function fetchJSON(url){
+  try{
+    const res = await fetch(url, {cache: "no-store"});
+    if(!res.ok) throw new Error("HTTP error");
+    return await res.json();
+  }catch(err){
+    console.warn("JSON fallback error:", url);
+    return null;
+  }
+}
+
+/* ---------------------------------------------------------
+   LOAD CONFIG + MENU (Firebase → fallback JSON)
+---------------------------------------------------------- */
+async function loadConfigAndMenu(){
+  if(useFirebase && window.firebase){
+    try{
+      const db = firebase.firestore();
+      const docRef = db.collection('restaurants').doc(restaurantKey);
+      const doc = await docRef.get();
+      if(doc.exists){
+        const data = doc.data();
+        config = data.config || data;
+        menuData = data.menu || { categories: [] };
+        applyConfigAndRender();
+        return;
+      }
+    }catch(e){
+      console.warn("Firebase error:", e);
+    }
+  }
+
+  const cfg = await fetchJSON('/data/config.json');
+  const men = await fetchJSON('/data/menu.json');
+
+  config = cfg || {
+    restaurantName: "Delivery Demo",
+    phone: "5522992637924",
+    logo: "assets/logo/logo.svg",
+    themeColor: "#0f1724",
+    accentColor: "#06b6d4",
+    payment: ["Pix","Cartão","Dinheiro"],
+    eta: "30-45 min",
+    status: "aberto"
+  };
+
+  menuData = men || { categories: [] };
+
+  applyConfigAndRender();
+}
+
+/* ---------------------------------------------------------
+   APPLY CONFIG + RENDER
+---------------------------------------------------------- */
+function applyConfigAndRender(){
+  document.getElementById('restaurantName').innerText = config.restaurantName || "Delivery Demo";
+  document.getElementById('restaurantSub').innerText = config.subtitle || "Sem mensalidade • Pedido rápido";
+  document.getElementById('storeStatus').innerText = (config.status || "aberto").toUpperCase();
+
+  if(config.logo){
+    document.getElementById('brandLogo').src = config.logo;
+  }
+
+  // Payment buttons
+  const payArea = document.getElementById('payOptions');
+  payArea.innerHTML = "";
+  (config.payment || []).forEach(p=>{
+    const b = document.createElement('button');
+    b.className = "pay-item";
+    b.innerText = p;
+    b.dataset.pay = p;
+
+    b.onclick = ()=>{
+      document.querySelectorAll('.pay-item').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      chosenPay = p;
+    };
+
+    payArea.appendChild(b);
+  });
+
+  // Promo Banner
+  const promo = document.getElementById('promoArea');
+  promo.innerHTML = "";
+  if(config.banner){
+    const div = document.createElement('div');
+    div.className = "card";
+    div.innerHTML = `<img src="${config.banner}" style="width:100%;border-radius:10px">`;
+    promo.appendChild(div);
+  }
+
+  renderMenu();
+  updateCartUI();
+}
+
+/* ---------------------------------------------------------
+   RENDER MENU
+---------------------------------------------------------- */
+function renderMenu(){
+  const area = document.getElementById('menuArea');
+  area.innerHTML = "";
+
+  (menuData.categories || []).forEach(cat=>{
+    const box = document.createElement('div');
+    box.className = "card";
+
+    const title = document.createElement('div');
+    title.className = "cat-title";
+    title.innerText = cat.title;
+
+    box.appendChild(title);
+
+    const itemsWrap = document.createElement('div');
+    itemsWrap.className = "items";
+
+    (cat.items || []).forEach(it=>{
+      const el = document.createElement('div');
+      el.className = "item";
+
+      el.innerHTML = `
+        <div class="thumb">${it.icon || '🍽'}</div>
+        <div class="info">
+          <div class="name">${it.name}</div>
+          <div class="desc">${it.desc || ""}</div>
+          <div class="row">
+            <div class="price">${money(it.price)}</div>
+            <button class="btn-add" data-id="${it.id}">Adicionar</button>
+          </div>
+        </div>
+      `;
+
+      itemsWrap.appendChild(el);
+    });
+
+    box.appendChild(itemsWrap);
+    area.appendChild(box);
+  });
+
+  document.querySelectorAll('.btn-add').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.id;
+      const item = menuData.categories.flatMap(c=>c.items)
+                                      .find(x=>x.id == id);
+      if(!item) return;
+
+      if(!cart[id]) cart[id] = {...item, qty:0};
+      cart[id].qty++;
+
+      updateCartUI();
+    };
+  });
+}
+
+/* ---------------------------------------------------------
+   CART UI UPDATE
+---------------------------------------------------------- */
+function updateCartUI(){
+  const count = Object.values(cart).reduce((s,i)=>s+i.qty,0);
+  const total = Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
+
+  document.getElementById("cartCount").innerText = count;
+  document.getElementById("cartTotal").innerText = money(total);
+
+  document.getElementById("cartbar").style.display = count>0 ? "flex" : "none";
+}
+
+/* ---------------------------------------------------------
+   CART MODAL
+---------------------------------------------------------- */
+document.getElementById("openCart").onclick = ()=> openModal();
+document.getElementById("closeModal").onclick = ()=> closeModal();
+document.getElementById("okDone").onclick = ()=> {
+  document.getElementById("successWrap").style.display = "none";
+};
+
+function openModal(){
+  document.getElementById("modalWrap").style.display = "flex";
+  renderCartList();
+}
+
+function closeModal(){
+  document.getElementById("modalWrap").style.display = "none";
+}
+
+function renderCartList(){
+  const list = document.getElementById("cartList");
+  list.innerHTML = "";
+
+  Object.values(cart).forEach(i=>{
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.justifyContent = "space-between";
+    row.style.padding = "6px 0";
+    row.innerHTML = `
+      <div>${i.qty}x ${i.name}</div>
+      <div>${money(i.qty*i.price)}</div>
+    `;
+    list.appendChild(row);
+  });
+
+  if(Object.keys(cart).length === 0){
+    list.innerHTML = `<div style="color:#999">Carrinho vazio</div>`;
+  }
+}
+
+/* ---------------------------------------------------------
+   SEND ORDER (WHATSAPP + SUCCESS)
+---------------------------------------------------------- */
+document.getElementById("confirmSend").onclick = async ()=>{
+  if(Object.values(cart).length === 0){
+    alert("Carrinho vazio");
+    return;
+  }
+
+  const name = document.getElementById("name").value || "---";
+  const address = document.getElementById("address").value || "---";
+  const phone = document.getElementById("phone").value || "---";
+  const note = document.getElementById("note").value || "";
+  const pay = chosenPay || (config.payment && config.payment[0]) || "Pix";
+
+  let text = `Resumo do Pedido - ${config.restaurantName}%0A`;
+  text += `Cliente: ${encodeURIComponent(name)}%0A`;
+  text += `Endereço: ${encodeURIComponent(address)}%0A`;
+  text += `Telefone: ${encodeURIComponent(phone)}%0A%0A`;
+  text += `Itens:%0A`;
+
+  Object.values(cart).forEach(i=>{
+    text += `${i.qty}x ${encodeURIComponent(i.name)} - ${encodeURIComponent(money(i.price))}%0A`;
+  });
+
+  const total = Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
+  text += `%0ATotal: ${encodeURIComponent(money(total))}%0A`;
+  text += `%0APagamento: ${encodeURIComponent(pay)}%0A`;
+
+  if(note) text += `%0AObs: ${encodeURIComponent(note)}%0A`;
+
+  closeModal();
+
+  document.getElementById("successInfo").innerText =
+    `Obrigado pela preferência — seu pedido já está sendo preparado. Tempo estimado: ${config.eta || "30-45 min"}.`;
+
+  document.getElementById("successWrap").style.display = "flex";
+
+  setTimeout(()=>{  
+    const phoneTo = (config && config.phone) ? config.phone.replace(/\D/g,'') : "5522992637924";
+    const url = `https://wa.me/${phoneTo}?text=${text}`;
+    window.open(url, "_blank");
+
+    for(const k of Object.keys(cart)) delete cart[k];
+    updateCartUI();
+  }, 1200);
+};
+
+/* ---------------------------------------------------------
+   INIT
+---------------------------------------------------------- */
+(async function init(){
+  await loadConfigAndMenu();
+})();
+
 preview.html
