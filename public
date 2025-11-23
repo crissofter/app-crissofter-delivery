@@ -538,6 +538,8 @@ loadAdminData();
 
       firebase.js
       ui.js
+
+
 index.html
 <!doctype html>
 <html lang="pt-BR">
@@ -885,17 +887,100 @@ document.getElementById('confirmSend').onclick = async ()=>{
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Painel Administrativo — Crissofter Delivery</title>
+
 <link rel="stylesheet" href="styles/admin.css">
 </head>
 
 <body>
-<div class="wrap">
 
-  <header>
-    <h1>Painel Administrativo</h
+<div class="admin-wrap">
+
+  <header class="admin-header">
+    <h1>Painel Administrativo</h1>
+    <div class="sub">Gerencie seu App PWA Delivery</div>
+  </header>
+
+  <section class="panel-section">
+    <h2>Informações do Restaurante</h2>
+
+    <label>Nome do Restaurante</label>
+    <input id="restName" placeholder="Ex: Burger House" />
+
+    <label>Subtítulo / Slogan</label>
+    <input id="restSub" placeholder="Ex: O melhor da cidade" />
+
+    <label>Telefone para receber pedidos (WhatsApp)</label>
+    <input id="restPhone" placeholder="55XXXXXXXXXXX" />
+
+    <label>Status do Estabelecimento</label>
+    <select id="restStatus">
+      <option value="aberto">Aberto</option>
+      <option value="fechado">Fechado</option>
+    </select>
+
+    <label>Banner (URL da imagem)</label>
+    <input id="banner" placeholder="https://..." />
+
+  </section>
+
+  <section class="panel-section">
+    <h2>Logotipo</h2>
+    <div class="note">O cliente poderá trocar facilmente depois.</div>
+
+    <label>Logo (URL)</label>
+    <input id="logo" placeholder="https://..." disabled value="assets/logo/logo.svg">
+  </section>
+
+  <section class="panel-section">
+    <h2>Cores do Tema</h2>
+
+    <label>Cor principal</label>
+    <input id="themeColor" type="color" value="#0f1724" />
+
+    <label>Cor de destaque</label>
+    <input id="accentColor" type="color" value="#06b6d4" />
+  </section>
+
+  <section class="panel-section">
+    <h2>Formas de Pagamento</h2>
+
+    <div id="paymentList"></div>
+
+    <button id="addPay" class="btn-primary" style="margin-top:10px">Adicionar Forma de Pagamento</button>
+  </section>
+
+  <section class="panel-section">
+    <h2>Categorias do Cardápio</h2>
+
+    <div id="categoryList"></div>
+
+    <button id="addCategory" class="btn-primary" style="margin-top:14px">
+      + Adicionar Categoria
+    </button>
+  </section>
+
+  <section class="panel-section">
+    <button id="saveAll" class="btn-save">
+      Salvar Configurações
+    </button>
+
+    <div class="save-note">
+      Ao salvar, o painel irá gerar um JSON pronto para colar em <strong>/data/config.json</strong>  
+      e <strong>/data/menu.json</strong>.
+    </div>
+  </section>
+
+</div>
+
+<script src="scripts/admin.js"></script>
+
+</body>
+</html>
+
+
 
 menu.json
 manifest.json
