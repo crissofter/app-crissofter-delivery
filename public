@@ -1,0 +1,361 @@
+/public
+   /assets
+      /img
+      /logo
+      /icons
+   /styles
+      app.css
+      admin.css
+   /scripts
+      app.js
+      admin.js
+      firebase.js
+      ui.js
+index.html
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Delivery — Demo</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root{
+    --bg: #071014;
+    --panel: #0f1720;
+    --muted: #a7b1b9;
+    --accent: #08a3c2;
+    --gold: #d4a73c;
+    --glass: rgba(255,255,255,0.03);
+    --radius: 12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter, system-ui, -apple-system, 'Helvetica Neue', Arial;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:420px;margin:18px auto;padding-bottom:140px}
+  header{display:flex;align-items:center;gap:12px;padding:18px;border-radius:14px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+  .logo img{height:44px}
+  .title{font-weight:800;font-size:18px}
+  .subtitle{font-size:13px;color:var(--muted)}
+  .status{margin-left:auto;font-size:12px;color:var(--muted)}
+  .hero{padding:14px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.03)}
+  .cat-title{font-weight:800;color:var(--gold);margin-bottom:8px}
+  .items{display:flex;flex-direction:column;gap:10px}
+  .item{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:var(--panel);border:1px solid rgba(255,255,255,0.02)}
+  .thumb{width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#093e7a);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .info{flex:1}
+  .name{font-weight:700}
+  .desc{color:var(--muted);font-size:13px;margin-top:6px}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .price{color:var(--gold);font-weight:800}
+  .btn-add{background:linear-gradient(90deg,var(--gold),#c99b2f);border:none;color:#021024;padding:8px 10px;border-radius:8px;font-weight:800;cursor:pointer}
+  .cartbar{position:fixed;left:12px;right:12px;bottom:12px;background:linear-gradient(90deg,#041018,#07141a);padding:12px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:420px;margin:0 auto;border:1px solid rgba(255,255,255,0.03)}
+  .cart-btn{background:var(--accent);color:#021024;padding:10px 12px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+  .count-badge{background:#0b1114;padding:6px 10px;border-radius:10px}
+  .modal-wrap{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:12px;z-index:999}
+  .modal{background:var(--panel);width:100%;max-width:420px;border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.03)}
+  label{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
+  input, select, textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff;margin-top:6px}
+  .pay-options{display:flex;gap:8px;margin-top:8px}
+  .pay-item{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
+  .pay-item.active{border-color:var(--gold);background:linear-gradient(90deg,rgba(212,167,60,0.12),transparent);color:var(--gold)}
+  .send-btn{width:100%;padding:12px;background:linear-gradient(90deg,#25D366,#128C7E);border:none;border-radius:10px;color:#fff;font-weight:800;margin-top:12px;cursor:pointer}
+  .success-card{background:linear-gradient(90deg, rgba(36,52,30,0.9), rgba(20,30,20,0.8)); padding:16px;border-radius:12px;text-align:center}
+  .small{font-size:13px;color:var(--muted);margin-top:8px}
+  footer{text-align:center;padding:16px;font-size:12px;color:var(--muted)}
+  .loader{height:4px;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:4px;overflow:hidden}
+  @media (min-width:900px){body{background:#061218} .wrap {max-width:720px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="logo"><img id="brandLogo" src="assets/logo/logo.svg" alt="logo" /></div>
+    <div>
+      <div class="title" id="restaurantName">Delivery Demo</div>
+      <div class="subtitle" id="restaurantSub">Sem mensalidade • Pedido rápido</div>
+    </div>
+    <div class="status" id="storeStatus">Carregando...</div>
+  </header>
+
+  <div class="hero">
+    <div id="promoArea"></div>
+
+    <div id="menuArea"></div>
+  </div>
+</div>
+
+<div class="cartbar" id="cartbar" style="display:none">
+  <div style="display:flex;gap:10px;align-items:center">
+    <strong id="cartCount">0</strong>
+    <div class="small">itens</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <strong id="cartTotal">R$ 0,00</strong>
+    <button class="cart-btn" id="openCart">Finalizar Pedido</button>
+  </div>
+</div>
+
+<div class="modal-wrap" id="modalWrap">
+  <div class="modal" id="modal">
+    <h3>Finalizar pedido</h3>
+    <div id="cartList"></div>
+
+    <label>Nome</label>
+    <input id="name" placeholder="Seu nome" />
+
+    <label>Endereço</label>
+    <input id="address" placeholder="Rua, Nº (ou retirar para takeaway)" />
+
+    <label>Telefone</label>
+    <input id="phone" placeholder="(xx) 9xxxx-xxxx" />
+
+    <label>Forma de pagamento</label>
+    <div class="pay-options" id="payOptions"></div>
+
+    <label>Observação (opcional)</label>
+    <textarea id="note" placeholder="Ex: sem cebola"></textarea>
+
+    <button class="send-btn" id="confirmSend">Finalizar Pedido</button>
+    <button style="width:100%;padding:10px;margin-top:8px;border-radius:8px;border:none;background:#111;color:var(--muted)" id="closeModal">Continuar Pedindo</button>
+  </div>
+</div>
+
+<!-- success toast/modal -->
+<div class="modal-wrap" id="successWrap" style="display:none">
+  <div class="modal">
+    <div class="success-card">
+      <h3>Pedido enviado com sucesso!</h3>
+      <div class="small" id="successInfo">Obrigado — seu pedido já está sendo preparado.</div>
+      <div style="margin-top:12px"><button class="send-btn" id="okDone">Voltar ao cardápio</button></div>
+    </div>
+  </div>
+</div>
+
+<footer>© Crissofter Delivery — Demo</footer>
+
+<script>
+/*
+ Hybrid loader:
+ - If window.FIREBASE_CONFIG is present, the app will try to use Firebase (Firestore + Storage)
+ - Otherwise it will fetch /data/config.json and /data/menu.json
+ - The code below supports both modes.
+*/
+
+let useFirebase = !!window.FIREBASE_CONFIG;
+let restaurantKey = window.location.pathname.split('/r/')[1] || "demo";
+const cart = {};
+let config = null;
+let menuData = null;
+let chosenPay = null;
+
+function money(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+/* ----------- DATA LAYER (hybrid) ----------- */
+async function fetchJSON(url){
+  try{
+    const res = await fetch(url, {cache: "no-store"});
+    if(!res.ok) throw new Error("not ok");
+    return await res.json();
+  }catch(e){
+    console.warn("fetchJSON failed:", url, e);
+    return null;
+  }
+}
+
+async function loadConfigAndMenu(){
+  if(useFirebase && window.firebase){
+    // Firebase mode - read from Firestore (requires firebase.js to be loaded and initialized)
+    try{
+      const db = firebase.firestore();
+      const docRef = db.collection('restaurants').doc(restaurantKey);
+      const doc = await docRef.get();
+      if(doc.exists){
+        const data = doc.data();
+        config = data.config || data;
+        menuData = data.menu || { categories: [] };
+        applyConfigAndRender();
+        return;
+      } else {
+        console.warn("Firebase: restaurant doc not found; falling back to JSON");
+      }
+    }catch(err){
+      console.warn("Firebase read error:", err);
+    }
+  }
+
+  // fallback to local JSON
+  const cfg = await fetchJSON('/data/config.json');
+  const m = await fetchJSON('/data/menu.json');
+  config = cfg || {
+    restaurantName: "Delivery Demo",
+    phone: "5522992637924",
+    themeColor: "#0f1724",
+    accentColor: "#06b6d4",
+    logo: "assets/logo/logo.svg",
+    payment: ["Pix","Cartão","Dinheiro"],
+    eta: "30-45 min",
+    status: "aberto"
+  };
+  menuData = m || { categories: [] };
+  applyConfigAndRender();
+}
+
+/* ----------- RENDER LAYER ----------- */
+function applyConfigAndRender(){
+  document.getElementById('restaurantName').innerText = config.restaurantName || "Delivery Demo";
+  document.getElementById('restaurantSub').innerText = config.subtitle || "Sem mensalidade • Pedido rápido";
+  document.getElementById('storeStatus').innerText = (config.status || "aberto").toUpperCase();
+  if(config.logo) document.getElementById('brandLogo').src = config.logo;
+  // payment options
+  const payOptions = document.getElementById('payOptions');
+  payOptions.innerHTML = "";
+  (config.payment || ["Pix","Cartão","Dinheiro"]).forEach(p=>{
+    const b = document.createElement('button');
+    b.className='pay-item';
+    b.innerText = p;
+    b.dataset.pay = p;
+    b.onclick = ()=>{ document.querySelectorAll('.pay-item').forEach(x=>x.classList.remove('active')); b.classList.add('active'); chosenPay = p; };
+    payOptions.appendChild(b);
+  });
+
+  // promo area (if any)
+  const promoArea = document.getElementById('promoArea');
+  promoArea.innerHTML = "";
+  if(config.banner){
+    const c = document.createElement('div');
+    c.className='card';
+    c.innerHTML = `<img src="${config.banner}" style="width:100%;border-radius:10px;display:block" alt="promo">`;
+    promoArea.appendChild(c);
+  }
+
+  renderMenu();
+  updateCartUI();
+}
+
+/* ----------- UI ----------- */
+function renderMenu(){
+  const menuArea = document.getElementById('menuArea');
+  menuArea.innerHTML = "";
+  (menuData.categories || []).forEach(cat=>{
+    const cCard = document.createElement('div'); cCard.className='card';
+    const h = document.createElement('div'); h.className='cat-title'; h.innerText = cat.title;
+    cCard.appendChild(h);
+    const itemsWrap = document.createElement('div'); itemsWrap.className='items';
+    (cat.items||[]).forEach(it=>{
+      const el = document.createElement('div'); el.className='item';
+      el.innerHTML = `
+        <div class="thumb">${it.icon || '🍽'}</div>
+        <div class="info">
+          <div class="name">${it.name}</div>
+          <div class="desc">${it.desc || ''}</div>
+          <div class="row">
+            <div class="price">${money(it.price)}</div>
+            <button class="btn-add" data-id="${it.id}">Adicionar</button>
+          </div>
+        </div>
+      `;
+      itemsWrap.appendChild(el);
+    });
+    cCard.appendChild(itemsWrap);
+    menuArea.appendChild(cCard);
+  });
+
+  document.querySelectorAll('.btn-add').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.id;
+      const item = menuData.categories.flatMap(c=>c.items).find(x=>x.id==id);
+      if(!item) return;
+      if(!cart[id]) cart[id] = {...item, qty:0};
+      cart[id].qty++;
+      updateCartUI();
+    };
+  });
+}
+
+function updateCartUI(){
+  const count = Object.values(cart).reduce((s,i)=>s+i.qty,0);
+  const total = Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
+  document.getElementById('cartCount').innerText = count;
+  document.getElementById('cartTotal').innerText = money(total);
+  document.getElementById('cartbar').style.display = count>0 ? 'flex' : 'none';
+}
+
+/* ----------- CART / FINALIZE ----------- */
+document.getElementById('openCart').onclick = ()=>{
+  openModal();
+};
+document.getElementById('closeModal').onclick = ()=>{ closeModal(); };
+document.getElementById('okDone').onclick = ()=>{ document.getElementById('successWrap').style.display='none'; };
+
+function openModal(){
+  document.getElementById('modalWrap').style.display='flex';
+  renderCartList();
+}
+function closeModal(){
+  document.getElementById('modalWrap').style.display='none';
+}
+function renderCartList(){
+  const list = document.getElementById('cartList'); list.innerHTML='';
+  Object.values(cart).forEach(i=>{
+    const d = document.createElement('div'); d.style.display='flex'; d.style.justifyContent='space-between'; d.style.padding='6px 0';
+    d.innerHTML = `<div>${i.qty}x ${i.name}</div><div>${money(i.qty*i.price)}</div>`;
+    list.appendChild(d);
+  });
+  if(Object.keys(cart).length===0) list.innerHTML = '<div style="color:#999">Carrinho vazio</div>';
+}
+
+/* success flow and hidden WhatsApp send */
+document.getElementById('confirmSend').onclick = async ()=>{
+  if(Object.values(cart).length===0){ alert('Carrinho vazio'); return; }
+  const name = document.getElementById('name').value || '---';
+  const address = document.getElementById('address').value || '---';
+  const phone = document.getElementById('phone').value || '---';
+  const note = document.getElementById('note').value || '';
+  const pay = chosenPay || (config.payment && config.payment[0]) || 'Pix';
+
+  // build summary
+  let text = `Resumo do Pedido - ${config.restaurantName}%0A`;
+  text += `Cliente: ${encodeURIComponent(name)}%0A`;
+  text += `Endereço: ${encodeURIComponent(address)}%0A`;
+  text += `Telefone: ${encodeURIComponent(phone)}%0A%0A`;
+  text += `Itens:%0A`;
+  Object.values(cart).forEach(i=>{
+    text += `${i.qty}x ${encodeURIComponent(i.name)} - ${encodeURIComponent(i.price.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}))}%0A`;
+  });
+  const total = Object.values(cart).reduce((s,i)=>s+i.qty*i.price,0);
+  text += `%0ATotal: ${encodeURIComponent(total.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}))}%0A`;
+  text += `%0AForma de pagamento: ${encodeURIComponent(pay)}%0A`;
+  if(note) text += `%0AObservação: ${encodeURIComponent(note)}%0A`;
+
+  // show success card first
+  closeModal();
+  document.getElementById('successInfo').innerText = `Obrigado pela preferência — seu pedido já está sendo preparado. Tempo estimado: ${config.eta || '30-45 min'}.`;
+  document.getElementById('successWrap').style.display='flex';
+
+  // small delay so user reads
+  setTimeout(()=> {
+    // send hidden via WhatsApp to restaurant phone (from config)
+    const phoneTo = (config && config.phone) ? config.phone.replace(/\D/g,'') : '5522992637924';
+    const url = `https://wa.me/${phoneTo}?text=${text}`;
+    window.open(url, '_blank');
+    // clear cart
+    for(let k of Object.keys(cart)){ delete cart[k]; }
+    updateCartUI();
+  }, 1200);
+};
+
+/* ----------- INIT ----------- */
+(async function init(){
+  // render loader if needed
+  await loadConfigAndMenu();
+})();
+</script>
+</body>
+</html>
+
+admin.html
+menu.json
+manifest.json
+sw.js
+preview.html
