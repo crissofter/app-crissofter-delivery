@@ -285,7 +285,257 @@ footer {
       admin.css
    /scripts
       app.js
-      admin.js
+ /scripts/admin.js
+/* ---------------------------------------------------------
+   Crissofter Delivery - ADMIN.JS
+   Painel administrativo simples baseado em JSON local
+   (futuramente pode ser migrado para Firebase facilmente)
+---------------------------------------------------------- */
+
+let adminConfig = null;
+let adminMenu = null;
+
+/* Pequeno utilitário */
+function money(v){
+  return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+
+/* ---------------------------------------------------------
+   LOAD JSON
+---------------------------------------------------------- */
+async function fetchAdminJSON(url){
+  try{
+    const res = await fetch(url + "?t=" + Date.now());
+    if(!res.ok) throw new Error("Err");
+    return await res.json();
+  }catch(e){
+    console.warn("Erro ao carregar JSON admin:", url);
+    return null;
+  }
+}
+
+async function loadAdminData(){
+  adminConfig = await fetchAdminJSON("/data/config.json");
+  adminMenu   = await fetchAdminJSON("/data/menu.json");
+
+  if(!adminConfig){
+    adminConfig = {
+      restaurantName: "Nome do Restaurante",
+      subtitle: "Slogan ou descrição",
+      phone: "55XXXXXXXXXXX",
+      logo: "assets/logo/logo.svg",
+      banner: "",
+      payment: ["Pix","Cartão","Dinheiro"],
+      status: "aberto",
+      themeColor: "#0f1724",
+      accentColor: "#06b6d4"
+    };
+  }
+
+  if(!adminMenu){
+    adminMenu = {
+      categories: []
+    };
+  }
+
+  renderAdmin();
+}
+
+/* ---------------------------------------------------------
+   RENDER TELA ADMIN
+---------------------------------------------------------- */
+function renderAdmin(){
+  document.getElementById("restName").value = adminConfig.restaurantName;
+  document.getElementById("restSub").value = adminConfig.subtitle || "";
+  document.getElementById("restPhone").value = adminConfig.phone;
+  document.getElementById("restStatus").value = adminConfig.status;
+  document.getElementById("themeColor").value = adminConfig.themeColor;
+  document.getElementById("accentColor").value = adminConfig.accentColor;
+  document.getElementById("banner").value = adminConfig.banner || "";
+
+  renderPayments();
+  renderCategories();
+}
+
+/* ---------------------------------------------------------
+   PAGAMENTOS
+---------------------------------------------------------- */
+function renderPayments(){
+  const box = document.getElementById("paymentList");
+  box.innerHTML = "";
+
+  adminConfig.payment.forEach((p, idx)=>{
+    const div = document.createElement("div");
+    div.className = "pay-item-row";
+
+    div.innerHTML = `
+      <input class="pay-input" value="${p}">
+      <button class="btn-del" data-i="${idx}">Excluir</button>
+    `;
+
+    box.appendChild(div);
+  });
+
+  document.querySelectorAll(".btn-del").forEach(btn=>{
+    btn.onclick = ()=>{
+      const i = btn.dataset.i;
+      adminConfig.payment.splice(i,1);
+      renderPayments();
+    };
+  });
+}
+
+document.getElementById("addPay").onclick = ()=>{
+  const val = prompt("Nova forma de pagamento:");
+  if(val){
+    adminConfig.payment.push(val);
+    renderPayments();
+  }
+};
+
+/* ---------------------------------------------------------
+   CATEGORIAS E ITENS
+---------------------------------------------------------- */
+function renderCategories(){
+  const area = document.getElementById("categoryList");
+  area.innerHTML = "";
+
+  adminMenu.categories.forEach((cat, cIndex)=>{
+    const div = document.createElement("div");
+    div.className = "cat-block";
+
+    div.innerHTML = `
+      <div class="cat-head">
+        <input class="cat-title-input" value="${cat.title}">
+        <button class="btn-del" data-c="${cIndex}">Excluir Categoria</button>
+      </div>
+
+      <div class="items-container" id="items-${cIndex}"></div>
+
+      <button class="btn-add-item" data-c="${cIndex}">Adicionar Item</button>
+    `;
+
+    area.appendChild(div);
+
+    // render items
+    const itemsBox = div.querySelector(`#items-${cIndex}`);
+    itemsBox.innerHTML = "";
+
+    cat.items.forEach((it, iIndex)=>{
+      const row = document.createElement("div");
+      row.className = "item-row";
+
+      row.innerHTML = `
+        <input class="item-name" value="${it.name}" placeholder="Nome">
+        <input class="item-desc" value="${it.desc || ""}" placeholder="Descrição">
+        <input class="item-price" value="${it.price}" placeholder="Preço">
+        <input class="item-icon" value="${it.icon || "🍽"}" placeholder="Ícone">
+        <button class="btn-del" data-c="${cIndex}" data-i="${iIndex}">X</button>
+      `;
+
+      itemsBox.appendChild(row);
+    });
+  });
+
+  /* Botões de exclusão de categoria */
+  document.querySelectorAll(".cat-head .btn-del").forEach(btn=>{
+    btn.onclick = ()=>{
+      const c = btn.dataset.c;
+      adminMenu.categories.splice(c,1);
+      renderCategories();
+    };
+  });
+
+  /* Botões de adicionar item */
+  document.querySelectorAll(".btn-add-item").forEach(btn=>{
+    btn.onclick = ()=>{
+      const c = btn.dataset.c;
+      adminMenu.categories[c].items.push({
+        id: Date.now(),
+        name: "Novo Item",
+        desc: "",
+        price: 0,
+        icon: "🍽"
+      });
+      renderCategories();
+    };
+  });
+
+  /* Excluir item */
+  document.querySelectorAll(".item-row .btn-del").forEach(btn=>{
+    btn.onclick = ()=>{
+      const c = btn.dataset.c;
+      const i = btn.dataset.i;
+      adminMenu.categories[c].items.splice(i,1);
+      renderCategories();
+    };
+  });
+}
+
+/* ---------------------------------------------------------
+   ADICIONAR NOVA CATEGORIA
+---------------------------------------------------------- */
+document.getElementById("addCategory").onclick = ()=>{
+  adminMenu.categories.push({
+    title: "Nova Categoria",
+    items: []
+  });
+  renderCategories();
+};
+
+/* ---------------------------------------------------------
+   SALVAR CONFIG + MENU EM JSON LOCAL
+---------------------------------------------------------- */
+document.getElementById("saveAll").onclick = ()=>{
+  // atualizar config
+  adminConfig.restaurantName = document.getElementById("restName").value;
+  adminConfig.subtitle       = document.getElementById("restSub").value;
+  adminConfig.phone          = document.getElementById("restPhone").value;
+  adminConfig.status         = document.getElementById("restStatus").value;
+  adminConfig.themeColor     = document.getElementById("themeColor").value;
+  adminConfig.accentColor    = document.getElementById("accentColor").value;
+  adminConfig.banner         = document.getElementById("banner").value;
+
+  // atualizar categorias + itens
+  const cats = document.querySelectorAll(".cat-block");
+  cats.forEach((catEl, cIdx)=>{
+    const title = catEl.querySelector(".cat-title-input").value;
+    adminMenu.categories[cIdx].title = title;
+
+    const itemRows = catEl.querySelectorAll(".item-row");
+    adminMenu.categories[cIdx].items = [];
+
+    itemRows.forEach((r)=>{
+      const name  = r.querySelector(".item-name").value;
+      const desc  = r.querySelector(".item-desc").value;
+      const price = parseFloat(r.querySelector(".item-price").value);
+      const icon  = r.querySelector(".item-icon").value;
+
+      adminMenu.categories[cIdx].items.push({
+        id: Date.now() + Math.floor(Math.random()*999),
+        name, desc, price, icon
+      });
+    });
+  });
+
+  /* Em ambiente de hospedagem real, isso enviaria via API/Firebase.
+     No GitHub Pages o admin é "local preview". */
+  alert("
+Configurações atualizadas!
+Copie os JSON abaixo para seu /data/
+
+config.json:
+" + JSON.stringify(adminConfig,null,2) + "
+
+menu.json:
+" + JSON.stringify(adminMenu,null,2));
+};
+
+/* ---------------------------------------------------------
+   INIT
+---------------------------------------------------------- */
+loadAdminData();
+
       firebase.js
       ui.js
 index.html
